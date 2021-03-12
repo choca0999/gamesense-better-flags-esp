@@ -7,11 +7,12 @@ end
 -- Initialization
 local icon_font = surface.create_font('AstriumWep', 14, 500, {0x010}, {0x080})
 local icon_font2 = surface.create_font('AstriumWep', 11, 500, {0x010}, {0x080})
-
+local text_font = surface.create_font('Verdana', 10, 700, {0x010}, {0x080})
+local duck_font = surface.create_font('Animals 2', 14, 500, {0x010}, {0x080})
 -- Plugin elements
 local refer = { 'Visuals', 'Player ESP' }
 
-local flag_list = { 'hk', 'scoped', "defuser" }
+local flag_list = { 'hk', 'scoped', "defuser", "c4", "hit", "fd" }
 
 local duck_ticks = { }
 local menu = {
@@ -24,6 +25,7 @@ local menu = {
 local entity_get_local_player = entity.get_local_player
 local entity_get_player_weapon = entity.get_player_weapon
 local entity_get_player_resource = entity.get_player_resource
+local client_trace_bullet = client.trace_bullet
 
 local entity_is_enemy = entity.is_enemy
 
@@ -66,7 +68,22 @@ local function get_entities(enemy_only, alive_only)
 
 	return result
 end
+local function can_enemy_hit_us(ent, ent2)	
+	if ent == nil then return end
+	
+	local origin_x, origin_y, origin_z = entity_get_prop(ent, "m_vecOrigin")
+	if origin_z == nil then return end
 
+    local lorigin_x, lorigin_y, lorigin_z = entity_get_prop(ent2, "m_vecOrigin")
+	if lorigin_z == nil then return end
+	
+	local ___, dmg = client_trace_bullet(ent, origin_x, origin_y, origin_z, lorigin_x, lorigin_y, lorigin_z, true)
+	
+
+	local damage = dmg ~= nil and dmg > 0
+	
+	return damage
+end
 client.set_event_callback('paint', function()
     local me = entity_get_local_player()
     local player_resource = entity_get_player_resource()
@@ -101,9 +118,13 @@ client.set_event_callback('paint', function()
 
         if x1 ~= nil and a_multiplier > 0 then
             local center = x1 + (x2-x1)/2
-
+            local should_draw_hitflag = false 
             local pflags = ui_get(menu.flags)
             local weapon = entity_get_player_weapon(player)
+            local wpn_id = entity_get_prop(weapon, "m_iItemDefinitionIndex")
+            local enemy_origin_x, enemy_origin_y, enemy_origin_z = entity_get_prop(enemy, "m_vecOrigin")
+            local local_origin_x, local_origin_y, local_origin_z = entity_get_prop(me, "m_vecOrigin")
+           
 
             if #pflags ~= 0 then
                 local offset = 0
@@ -151,6 +172,44 @@ client.set_event_callback('paint', function()
                             surface_draw_text(x2 + 6, y1 + (offset * 10) - 2, 255, 0, 0, a_multiplier*255, icon_font, 'r')
                             offset = offset + 1.4
                         end
+                    end
+                    if flag == 'c4' and wpn_id == 49 then
+                        surface_draw_text(x2 + 6, y1 + (offset * 10) - 2, 100, 100, 100, a_multiplier*255, icon_font, 'o')
+                        offset = offset + 1.4         
+                    end
+                  
+                    if flag == 'hit' and can_enemy_hit_us(player, me) then
+                        surface_draw_text(x2 + 6, y1 + (offset * 10) - 2, 255, 100, 0, a_multiplier*255, text_font, '(!)')
+                        offset = offset + 1.4         
+                    end
+                    
+                    if flag == 'fd' then
+                        local toBits = function(num) local t = { }; while num > 0 do rest = math.fmod(num,2); t[#t+1] = rest; num = (num-rest) / 2 end return t end
+
+                        local duck_amt = entity_get_prop(player, 'm_flDuckAmount')
+                        local duck_speed = entity_get_prop(player, 'm_flDuckSpeed')
+                        local m_fFlags = entity_get_prop(player, 'm_fFlags')
+
+                        if duck_ticks == nil then
+                            duck_ticks = { }
+                        end
+
+                        if duck_ticks[player] == nil then duck_ticks[player] = 0 end
+                        if duck_speed ~= nil and duck_amt ~= nil then
+                            if duck_speed == 8 and duck_amt <= 0.9 and duck_amt > 0.01 and toBits(m_fFlags)[1] == 1 then
+                                if storedTick ~= globals_tickcount() then
+                                    duck_ticks[player] = duck_ticks[player] + 1
+                                    storedTick = globals_tickcount()
+                                end
+            
+                                if duck_ticks[player] >= 5 then 
+                                    surface_draw_text(x2 + 6, y1 + (offset * 10) - 2, 245, 55, 0, a_multiplier*255, duck_font, 'A')
+                                    offset = offset + 1.4         
+                                end
+                            else
+                                duck_ticks[player] = 0
+                            end
+                        end     
                     end
                 end
             end
