@@ -8,11 +8,12 @@ end
 local icon_font = surface.create_font('AstriumWep', 14, 500, {0x010}, {0x080})
 local icon_font2 = surface.create_font('AstriumWep', 11, 500, {0x010}, {0x080})
 local text_font = surface.create_font('Verdana', 10, 700, {0x010}, {0x080})
+local text_font2 = surface.create_font('Verdana', 9, 500, {0x010}, {0x080})
 local duck_font = surface.create_font('Animals 2', 14, 500, {0x010}, {0x080})
 -- Plugin elements
 local refer = { 'Visuals', 'Player ESP' }
 
-local flag_list = { 'hk', 'scoped', "defuser", "c4", "hit", "fd" }
+local flag_list = { 'hk', 'scoped', "defuser", "c4", "hit", "fd ( animal )", "fd ( text )" }
 
 local duck_ticks = { }
 local menu = {
@@ -182,9 +183,8 @@ client.set_event_callback('paint', function()
                         surface_draw_text(x2 + 6, y1 + (offset * 10) - 2, 255, 100, 0, a_multiplier*255, text_font, '(!)')
                         offset = offset + 1.4         
                     end
-                    
-                    if flag == 'fd' then
-                        local toBits = function(num) local t = { }; while num > 0 do rest = math.fmod(num,2); t[#t+1] = rest; num = (num-rest) / 2 end return t end
+                    local draw_fd = false
+                    local toBits = function(num) local t = { }; while num > 0 do rest = math.fmod(num,2); t[#t+1] = rest; num = (num-rest) / 2 end return t end
 
                         local duck_amt = entity_get_prop(player, 'm_flDuckAmount')
                         local duck_speed = entity_get_prop(player, 'm_flDuckSpeed')
@@ -203,14 +203,20 @@ client.set_event_callback('paint', function()
                                 end
             
                                 if duck_ticks[player] >= 5 then 
-                                    surface_draw_text(x2 + 6, y1 + (offset * 10) - 2, 245, 55, 0, a_multiplier*255, duck_font, 'A')
-                                    offset = offset + 1.4         
+                                    draw_fd = true                       
                                 end
                             else
                                 duck_ticks[player] = 0
                             end
-                        end     
-                    end
+                        end
+
+                    if flag == 'fd ( animal )' and draw_fd then
+                         surface_draw_text(x2 + 2, y1 + (offset * 10) - 2, 255, 255, 255, a_multiplier*255, duck_font, 'A')
+                         offset = offset + 1
+                    else if flag == 'fd ( text )' and draw_fd then
+                        surface_draw_text(x2 + 2, y1 + (offset * 10) - 2, 255, 255, 255, a_multiplier*255, text_font, 'FD')
+                        offset = offset + 1
+                    end end
                 end
             end
         end
