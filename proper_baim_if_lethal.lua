@@ -34,13 +34,13 @@ local baim_hitboxes = {3,4,5,6} --im using only stomach, lowerchest,chest,upperc
 local function trace_damage(ent, localplayer)	
 	if ent == nil then return end
 	
-    local lorigin_x, lorigin_y, lorigin_z = entity_get_prop(localplayer, "m_vecOrigin")
-	if lorigin_z == nil then return end
+    local leyeposx, leyeposy, leyeposz = client.eye_position()
+	if leyeposz == nil then return end
 
     local final_damage = 0
     for k,v in pairs(baim_hitboxes) do
         local endHitbox = vector(entity_hitbox_position(ent, v))
-	    local ___, dmg = client_trace_bullet(localplayer, lorigin_x, lorigin_y, lorigin_z, endHitbox.x, endHitbox.y, endHitbox.z, true)
+	    local ___, dmg = client_trace_bullet(localplayer, leyeposx, leyeposy, leyeposz, endHitbox.x, endHitbox.y, endHitbox.z, true)
 	
 	    if ( dmg > final_damage) then --if we can hit body hitboxes i use this in case of head only visible / legs etc so we don't break our aimbot
             final_damage = dmg
