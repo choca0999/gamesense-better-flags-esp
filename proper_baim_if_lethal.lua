@@ -37,6 +37,7 @@ local function on_run_command()
 
         if (is_lethal) then 
             plist_set(player, "Override prefer body aim", "Force")
+            --print("lethal")
         else 
             plist_set(player, "Override prefer body aim", "-")
         end
