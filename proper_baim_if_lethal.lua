@@ -35,10 +35,9 @@ local function on_run_command()
         local target_health = entity_get_prop(player, "m_iHealth") 
         local is_lethal     = is_baimable(player, me) >= target_health
         if ( target_health <= 0 ) then return end
-
         if (is_lethal) then 
             plist_set(player, "Override prefer body aim", "Force")
-            --print("lethal")
+            print("lethal")
         else 
             plist_set(player, "Override prefer body aim", "-")
         end
