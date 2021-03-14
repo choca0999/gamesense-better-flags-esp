@@ -1,3 +1,6 @@
+-- local variables for API functions. any changes to the line below will be lost on re-generation
+local client_create_interface, client_set_event_callback, entity_hitbox_position, plist_set, require, ui_new_checkbox, pairs, error = client.create_interface, client.set_event_callback, entity.hitbox_position, plist.set, require, ui.new_checkbox, pairs, error
+
 local bit = require('bit')
 local ffi = require('ffi')
 local vector = require('vector')
@@ -22,7 +25,7 @@ local math_min = math.min
 local ui_get = ui.get
 
 --ui
-local ui_force_baim_if_lethal = ui.new_checkbox("LUA", "A", "Force Baim if Lethal")
+local ui_force_baim_if_lethal = ui_new_checkbox("LUA", "A", "Force Baim if Lethal")
 
 --entry
 local baim_hitboxes = {3,4,5,6} --im using only stomach, lowerchest,chest,upperchest i don't use pelvis since it's an innacurate hitbox due to many reasons but u can use it if u want
@@ -36,7 +39,7 @@ local function trace_damage(ent, localplayer)
 
     local final_damage = 0
     for k,v in pairs(baim_hitboxes) do
-        local endHitbox = vector(entity.hitbox_position(ent, v))
+        local endHitbox = vector(entity_hitbox_position(ent, v))
 	    local ___, dmg = client_trace_bullet(localplayer, lorigin_x, lorigin_y, lorigin_z, endHitbox.x, endHitbox.y, endHitbox.z, true)
 	
 	    if ( dmg > final_damage) then --if we can hit body hitboxes i use this in case of head only visible / legs etc so we don't break our aimbot
@@ -58,7 +61,7 @@ ffi.cdef[[
   typedef uintptr_t (__thiscall* GetClientEntity_4242425_t)(void*, int);
 ]]
 
-local ffi_EntListPointer = ffi.cast("void***", client.create_interface("client.dll", "VClientEntityList003")) or error("Failed to find VClientEntityList003!")
+local ffi_EntListPointer = ffi.cast("void***", client_create_interface("client.dll", "VClientEntityList003")) or error("Failed to find VClientEntityList003!")
 local ffi_GetClientEntFN = ffi.cast("GetClientEntity_4242425_t", ffi_EntListPointer[0][3])
 
 local ffi_helpers = {
@@ -140,11 +143,11 @@ local function rbot_run_hitscan()
 
         if (is_lethal) then 
             --print("[RBOT] lethal target found!")
-            plist.set(player, "Override prefer body aim", "Force")
+            plist_set(player, "Override prefer body aim", "Force")
         else 
-            plist.set(player, "Override prefer body aim", "-")
+            plist_set(player, "Override prefer body aim", "-")
         end
     end
 end
 
-client.set_event_callback("run_command", rbot_run_hitscan)
+client_set_event_callback("run_command", rbot_run_hitscan)
