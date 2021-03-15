@@ -7,13 +7,28 @@ local master_switch = ui_new_checkbox("LUA", "A", "Force Baim if Lethal")
 
 local baim_hitboxes = {3,4,5,6}
 
+function extrapolate_position(xpos,ypos,zpos,ticks,player)
+	local x,y,z = entity_get_prop(player, "m_vecVelocity")
+	for i = 0, ticks do
+		xpos =  xpos + (x * globals.tickinterval())
+		ypos =  ypos + (y * globals.tickinterval())
+		zpos =  zpos + (z * globals.tickinterval())
+	end
+	return xpos,ypos,zpos
+end
+
 local function is_baimable(ent, localplayer)	
-    local eyepos        = vector(client_eye_position())
     local final_damage  = 0
 
+    local eyepos_x, eyepos_y, eyepos_z = client_eye_position()
+    local  fs_stored_eyepos_x, fs_stored_eyepos_y, fs_stored_eyepos_z
+
+    eyepos_x, eyepos_y, eyepos_z = extrapolate_position(eyepos_x, eyepos_y, eyepos_z, 20, localplayer)
+
+    fs_stored_eyepos_x, fs_stored_eyepos_y, fs_stored_eyepos_z = eyepos_x, eyepos_y, eyepos_z
     for k,v in pairs(baim_hitboxes) do
         local hitbox    = vector(entity_hitbox_position(ent, v))
-	    local ___, dmg  = client_trace_bullet(localplayer, eyepos.x, eyepos.y, eyepos.z, hitbox.x, hitbox.y, hitbox.z, true)
+	    local ___, dmg  = client_trace_bullet(localplayer, fs_stored_eyepos_x, fs_stored_eyepos_y, fs_stored_eyepos_z, hitbox.x, hitbox.y, hitbox.z, true)
 	
 	    if ( dmg > final_damage) then
             final_damage = dmg
@@ -34,10 +49,12 @@ local function on_run_command()
         local player        = players[i]
         local target_health = entity_get_prop(player, "m_iHealth") 
         local is_lethal     = is_baimable(player, me) >= target_health
+
         if ( target_health <= 0 ) then return end
+
         if (is_lethal) then 
             plist_set(player, "Override prefer body aim", "Force")
-            print("lethal")
+            --print("lethal")
         else 
             plist_set(player, "Override prefer body aim", "-")
         end
