@@ -69,21 +69,22 @@ local function get_entities(enemy_only, alive_only)
 
 	return result
 end
-local function can_enemy_hit_us(ent, ent2)	
-	if ent == nil then return end
-	
-	local origin_x, origin_y, origin_z = entity_get_prop(ent, "m_vecOrigin")
-	if origin_z == nil then return end
+local function can_enemy_hit_us(ent, ent2)    
+    if ent == nil then return end
+    
+    local eyepos = vector(entity_get_prop(ent, "m_vecOrigin")) + vector(0,0,64)
+    if eyepos.z == nil then return end
 
-    local lorigin_x, lorigin_y, lorigin_z = entity_get_prop(ent2, "m_vecOrigin")
-	if lorigin_z == nil then return end
-	
-	local ___, dmg = client_trace_bullet(ent, origin_x, origin_y, origin_z, lorigin_x, lorigin_y, lorigin_z, true)
-	
-
-	local damage = dmg ~= nil and dmg > 0
-	
-	return damage
+    local damage = 0
+    for i = 0, 19 do
+        local curHitbox = vector(entity.hitbox_position(ent2, i))
+        local _, dmg = client_trace_bullet(ent, eyepos.x, eyepos.y, eyepos.z, curHitbox.x, curHitbox.y, curHitbox.z, true)
+        if dmg > damage then 
+            damage = dmg 
+        end
+    end    
+    
+    return damage > 0
 end
 client.set_event_callback('paint', function()
     local me = entity_get_local_player()
